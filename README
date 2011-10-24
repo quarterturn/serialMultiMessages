@@ -1,0 +1,4 @@
+Here is a short example demonstrating taking serial string input and storing and retrieving to and from EEPROM. This is done using EEMEM and <avr.eeprom.h>. I also demonstrate using PSTR-like functionality to keep serial response strings in flash but "print" them to serial directly, without copying them into a temp array using PROGMEM.
+
+For brevity and laziness, I define three separate EEMEM strings and select them via a case statement. The right way to do it is figure out if in EEPROM you can have pointers to pointers. Anyone try it? Also, I have seen many examples using structs. I should try that too, but held off since I have to look into whether you have to copy the whole thing into RAM or can just copy a specific member of the struct.
+
