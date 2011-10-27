@@ -35,6 +35,9 @@ Version: 0.1
 // serial baudrate
 #define SERIAL_BAUD 9600
 
+// compare this to what is stored in the eeprom to see if it has been cleared
+#define EE_MAGIC_NUMBER 0xFEDC
+
 // for tracking time in delay loops
 // global so it can be used in any function
 unsigned long previousMillis;
@@ -45,11 +48,15 @@ byte mainMenuCount = 0;
 // global buffer for a string copied from internal FLASH or EEPROM
 // initialize to '0'
 char currentString[MAX_SIZE] = {0};
+// RAM copy of eeprom magic number
+uint16_t magicNumber;
 
 // eeprom message string
 uint8_t EEMEM ee_msgString1[MAX_SIZE];
 uint8_t EEMEM ee_msgString2[MAX_SIZE];
 uint8_t EEMEM ee_msgString3[MAX_SIZE];
+// eeprom magic number to detect if eeprom has been cleared
+uint16_t EEMEM ee_magicNumber;
 
 // loop break flag on input
 byte breakout = 0;
@@ -61,6 +68,14 @@ void setup()
 {
   // set up the serial port
   Serial.begin(SERIAL_BAUD);
+  
+  // see if the eeprom has been cleared
+  // if it has, initialize it with default values
+  magicNumber = eeprom_read_word(&ee_magicNumber);
+  if (magicNumber != EE_MAGIC_NUMBER)
+  {
+    initEeprom();
+  }
   
 } // end setup
 
@@ -277,7 +292,7 @@ void editString()
               // set flag to redraw menu
               mainMenuCount = 0;
               // make the last character a null
-              cCount++;
+              // cCount++;
               currentString[cCount] = 0;
               // mark the string done
               stringDone = 1;             
@@ -320,9 +335,9 @@ void editString()
       print(PSTR2("You entered: "));
       Serial.println();
       Serial.println(currentString);
-      print(PSTR2("<Y> to enter another or"));
+      print(PSTR2("<y> to enter another or"));
       Serial.println();
-      print(PSTR2("<N> return to Main Menu"));
+      print(PSTR2("<n> return to Main Menu"));
       Serial.println();
       Serial.flush();
       while (menuChar != 'y')
@@ -455,4 +470,20 @@ void writeEepromBlock(byte msgNum)
     default:
       break;
   }
+}
+
+//---------------------------------------------------------------------------------------------//
+// function initEeprom
+// loads default values into the eeprom if nothing is present based on ee_magicNumber
+// not having the correct value
+//---------------------------------------------------------------------------------------------//
+void initEeprom()
+{
+  sprintf(currentString, "Default message slot 1");
+  eeprom_write_block((const void*) &currentString, (void*) &ee_msgString1, sizeof(currentString));
+  sprintf(currentString, "Default message slot 2");
+  eeprom_write_block((const void*) &currentString, (void*) &ee_msgString2, sizeof(currentString));
+  sprintf(currentString, "Default message slot 3");
+  eeprom_write_block((const void*) &currentString, (void*) &ee_msgString3, sizeof(currentString));
+  eeprom_write_word(&ee_magicNumber, EE_MAGIC_NUMBER);
 }
